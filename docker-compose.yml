@@ -1,0 +1,181 @@
+version: "3.7" #https://docs.docker.com/compose/compose-file/compose-versioning/
+
+networks:
+  laravel_net_dev:
+    name: ${NETWORK_NAME_DEV}
+
+#Volumes
+volumes:
+  dbdata:
+    name: "${PROJECT_PREFIX_DEV}_dbdata"
+    driver: local
+
+# Workflow
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: ./compose/dev/nginx/Dockerfile
+    container_name: "${PROJECT_PREFIX_DEV}_nginx"
+    ports:
+      - ${EXTERNAl_IP_DEV}:80:80
+      - ${EXTERNAl_IP_DEV}:443:443
+      # Port for xdebug (ensure this matches the remote_port in the xdebug.ini)
+      - 9001:9001
+    volumes:
+      - ./www/rabbitmq.loc:/var/www/html:delegated
+      - ./docker-logs/nginx:/var/log/nginx
+      - ./compose/dev/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./compose/dev/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    environment:
+      NGINX_CONF_SERVER_NAMES_DEV: ${NGINX_CONF_SERVER_NAMES_DEV}
+    depends_on:
+      - php
+      - mysql
+    networks:
+      - laravel_net_dev
+
+  mysql:
+    image: mysql:5.7.29 # Имя образа и его версия
+    container_name: "${PROJECT_PREFIX_DEV}_mysql"
+    restart: unless-stopped # Всегда перезапускайте контейнер, если он останавливается, за исключением того, что при остановке контейнера (вручную или иным образом) он не перезапускается даже после перезапуска демона Docker.always
+    tty: true #подключает виртуальную консоль. Это нужно, чтобы команда cat не завершала работу, иначе контейнер остановится.
+    expose:
+      - 3306 # Порт контейнера
+    environment: # Переменные из .env
+      MYSQL_DATABASE: ${DB_DATABASE_DEV}
+      MYSQL_USER: ${DB_USERNAME_DEV}
+      MYSQL_PASSWORD: ${DB_PASSWORD_DEV}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD_DEV}
+    volumes:
+      #- ./compose/dev/mysql/my.cnf:/etc/mysql/my.cnf # Конфиги
+      - dbdata:/var/lib/mysql/ # Место где БД хранится, можно и локальный volume.
+      - ./docker-logs/mysql:/var/log/mysql
+    networks:
+      - laravel_net_dev
+
+  redis:
+    image: "redis:alpine"
+    container_name: "${PROJECT_PREFIX_DEV}_redis"
+    restart: unless-stopped
+    expose:
+      - 6379
+    networks:
+      - laravel_net_dev
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: "${PROJECT_PREFIX_DEV}_phpmyadmin"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD_DEV}
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+    - "${EXTERNAl_IP_DEV}:8081:80"
+    volumes:
+      - /sessions
+    networks:
+      - laravel_net_dev
+    links:
+      - mysql
+
+  php:
+    build:
+      context: .
+      dockerfile: ./compose/dev/php/Dockerfile
+    container_name: "${PROJECT_PREFIX_DEV}_php"
+    volumes:
+      - ./www/rabbitmq.loc:/var/www/html:delegated # Каталог, где будет жить наш проект
+      # Enable xdebug
+      - ./compose/dev/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      # Custom php.ini
+      - ./compose/dev/php/config/php.ini:/usr/local/etc/php/php.ini
+      # Error log
+      - ./docker-logs/php/php_errors.log:/var/log/php_errors.log
+      - ./docker-logs/php/fpm-php.www.log:/var/log/fpm-php.www.log
+    expose:
+      - 9000
+    networks:
+      - laravel_net_dev
+
+  composer:
+    build:
+      context: .
+      dockerfile: ./compose/dev/php/composer/Dockerfile
+    container_name: "${PROJECT_PREFIX_DEV}_composer"
+    volumes:
+      - ./www/rabbitmq.loc:/var/www/html # Каталог, где будет жить наш проект
+    working_dir: /var/www/html
+    depends_on:
+      - php
+    user: laravel
+    networks:
+      - laravel_net_dev
+    entrypoint: ['composer', '--ignore-platform-reqs']
+
+  npm:
+    image: node:15.0.1
+    container_name: "${PROJECT_PREFIX_DEV}_npm"
+    volumes:
+      - ./www/rabbitmq.loc:/var/www/html
+    working_dir: /var/www/html
+    entrypoint: ['npm']
+
+  artisan:
+    build:
+      context: .
+      dockerfile: ./compose/dev/php/Dockerfile
+    container_name: "${PROJECT_PREFIX_DEV}_artisan"
+    volumes:
+      - ./www/rabbitmq.loc:/var/www/html:delegated
+    depends_on:
+      - mysql
+    working_dir: /var/www/html
+    user: laravel
+    entrypoint: ['php', '/var/www/html/artisan']
+    networks:
+      - laravel_net_dev
+
+  rabbitmq:
+    image: rabbitmq:3.8
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASSWORD: guest
+      RABBITMQ_DEFAULT_VHOST: /
+#      RABBITMQ_SSL_CACERTFILE: /rootCA.pem
+#      RABBITMQ_SSL_CERTFILE: /rootCA.pem
+#      RABBITMQ_SSL_KEYFILE: /rootCA.key
+#      RABBITMQ_SSL_VERIFY: verify_none
+#      RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT: "false"
+#    volumes:
+#      - ./tests/files/rootCA.pem:/rootCA.pem:ro
+#      - ./tests/files/rootCA.key:/rootCA.key:ro
+    expose:
+      - 15671
+      - 15672
+      - 5671
+      - 5672
+
+  rabbitmq-management:
+    image: rabbitmq:management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASSWORD: guest
+      RABBITMQ_DEFAULT_VHOST: /
+#      RABBITMQ_MANAGEMENT_SSL_CACERTFILE: /rootCA.pem
+#      RABBITMQ_MANAGEMENT_SSL_CERTFILE: /rootCA.pem
+#      RABBITMQ_MANAGEMENT_SSL_KEYFILE: /rootCA.key
+#      RABBITMQ_MANAGEMENT_SSL_VERIFY: verify_none
+#      RABBITMQ_MANAGEMENT_SSL_FAIL_IF_NO_PEER_CERT: "false"
+#    volumes:
+#      - ./tests/files/rootCA.pem:/rootCA.pem:ro
+#      - ./tests/files/rootCA.key:/rootCA.key:ro
+    ports:
+      - 15671:15671
+      - 15672:15672
+      - 5671:5671
+      - 5672:5672

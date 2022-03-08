@@ -10,9 +10,6 @@ composer.phar
 # You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
 # composer.lock
 
-### dotenv ###
-.env
-
 ### Laravel ###
 node_modules/
 npm-debug.log
@@ -110,9 +107,6 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env.test
-.env*.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

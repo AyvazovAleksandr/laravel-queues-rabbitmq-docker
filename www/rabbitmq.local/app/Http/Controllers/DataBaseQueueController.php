@@ -14,7 +14,7 @@ use App\MyServices\LowPriorityService;
 use App\MyServices\MiddlePriorityService;
 use App\Models\RandomCounter;
 
-class RabbitQueueController extends BaseController
+class DataBaseQueueController extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
@@ -30,13 +30,13 @@ class RabbitQueueController extends BaseController
             foreach ($searchServices as $service) {
                 switch (get_class($service)) {
                     case "App\MyServices\HighestPriorityService":
-                        dispatch(new ProcessPriority($service))->onQueue('high');
+                        dispatch(new ProcessPriority($service))->onConnection('database')->onQueue('high');
                         break;
                     case "App\MyServices\MiddlePriorityService":
-                        dispatch(new ProcessPriority($service))->onQueue('middle');
+                        dispatch(new ProcessPriority($service))->onConnection('database')->onQueue('middle');
                         break;
                     case "App\MyServices\LowPriorityService":
-                        dispatch(new ProcessPriority($service))->onQueue('low');
+                        dispatch(new ProcessPriority($service))->onConnection('database')->onQueue('low');
                         break;
                 }
             }

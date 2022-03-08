@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RabbitQueueController;
+use App\Http\Controllers\RabbitMqQueueController;
+use App\Http\Controllers\DataBaseQueueController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,4 +18,5 @@ use App\Http\Controllers\RabbitQueueController;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/rabbit', [RabbitQueueController::class, 'index']);
+Route::get('/rabbitmq', [RabbitMqQueueController::class, 'index']);
+Route::get('/database', [DataBaseQueueController::class, 'index']);

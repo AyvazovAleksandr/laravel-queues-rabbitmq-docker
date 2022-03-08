@@ -49,9 +49,14 @@ docker-compose run --rm composer create-project laravel/laravel=8.6.11 .
 docker-compose run --rm composer require vladimir-yuldashev/laravel-queue-rabbitmq=11.3.0
 ```
 
-## Запуск работы с приоритетом
+## Проверить очередь в rabbitmq
 ```
-docker-compose run --rm artisan queue:work --queue=hight,middle,low
+docker exec -it project_dev_rabbitmq rabbitmqctl list_queues
+```
+
+## Запуск работы rabbitmq с очередями
+```
+docker-compose run --rm artisan queue:work rabbitmq --queue=high,middle,low
 ```
 
 ---

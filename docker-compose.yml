@@ -23,7 +23,7 @@ services:
       # Port for xdebug (ensure this matches the remote_port in the xdebug.ini)
       - 9001:9001
     volumes:
-      - ./www/rabbitmq.loc:/var/www/html:delegated
+      - ./www/rabbitmq.local:/var/www/html:delegated
       - ./docker-logs/nginx:/var/log/nginx
       - ./compose/dev/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./compose/dev/nginx/default.conf:/etc/nginx/conf.d/default.conf
@@ -89,7 +89,7 @@ services:
       dockerfile: ./compose/dev/php/Dockerfile
     container_name: "${PROJECT_PREFIX_DEV}_php"
     volumes:
-      - ./www/rabbitmq.loc:/var/www/html:delegated # Каталог, где будет жить наш проект
+      - ./www/rabbitmq.local:/var/www/html:delegated # Каталог, где будет жить наш проект
       # Enable xdebug
       - ./compose/dev/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       # Custom php.ini
@@ -108,7 +108,7 @@ services:
       dockerfile: ./compose/dev/php/composer/Dockerfile
     container_name: "${PROJECT_PREFIX_DEV}_composer"
     volumes:
-      - ./www/rabbitmq.loc:/var/www/html # Каталог, где будет жить наш проект
+      - ./www/rabbitmq.local:/var/www/html # Каталог, где будет жить наш проект
     working_dir: /var/www/html
     depends_on:
       - php
@@ -121,7 +121,7 @@ services:
     image: node:15.0.1
     container_name: "${PROJECT_PREFIX_DEV}_npm"
     volumes:
-      - ./www/rabbitmq.loc:/var/www/html
+      - ./www/rabbitmq.local:/var/www/html
     working_dir: /var/www/html
     entrypoint: ['npm']
 
@@ -131,7 +131,7 @@ services:
       dockerfile: ./compose/dev/php/Dockerfile
     container_name: "${PROJECT_PREFIX_DEV}_artisan"
     volumes:
-      - ./www/rabbitmq.loc:/var/www/html:delegated
+      - ./www/rabbitmq.local:/var/www/html:delegated
     depends_on:
       - mysql
     working_dir: /var/www/html
@@ -143,14 +143,14 @@ services:
   rabbitmq:
     image: rabbitmq:3.8
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASSWORD: guest
-      RABBITMQ_DEFAULT_VHOST: /
-#      RABBITMQ_SSL_CACERTFILE: /rootCA.pem
-#      RABBITMQ_SSL_CERTFILE: /rootCA.pem
-#      RABBITMQ_SSL_KEYFILE: /rootCA.key
-#      RABBITMQ_SSL_VERIFY: verify_none
-#      RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT: "false"
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASSWORD: ${RABBITMQ_DEFAULT_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST}
+#      RABBITMQ_SSL_CACERTFILE: ${RABBITMQ_SSL_CACERTFILE}
+#      RABBITMQ_SSL_CERTFILE: ${RABBITMQ_SSL_CERTFILE}
+#      RABBITMQ_SSL_KEYFILE: ${RABBITMQ_SSL_KEYFILE}
+#      RABBITMQ_SSL_VERIFY: ${RABBITMQ_SSL_VERIFY}
+#      RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT: ${RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT}
 #    volumes:
 #      - ./tests/files/rootCA.pem:/rootCA.pem:ro
 #      - ./tests/files/rootCA.key:/rootCA.key:ro
@@ -163,14 +163,14 @@ services:
   rabbitmq-management:
     image: rabbitmq:management
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASSWORD: guest
-      RABBITMQ_DEFAULT_VHOST: /
-#      RABBITMQ_MANAGEMENT_SSL_CACERTFILE: /rootCA.pem
-#      RABBITMQ_MANAGEMENT_SSL_CERTFILE: /rootCA.pem
-#      RABBITMQ_MANAGEMENT_SSL_KEYFILE: /rootCA.key
-#      RABBITMQ_MANAGEMENT_SSL_VERIFY: verify_none
-#      RABBITMQ_MANAGEMENT_SSL_FAIL_IF_NO_PEER_CERT: "false"
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASSWORD: ${RABBITMQ_DEFAULT_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST}
+    #      RABBITMQ_SSL_CACERTFILE: ${RABBITMQ_SSL_CACERTFILE}
+    #      RABBITMQ_SSL_CERTFILE: ${RABBITMQ_SSL_CERTFILE}
+    #      RABBITMQ_SSL_KEYFILE: ${RABBITMQ_SSL_KEYFILE}
+    #      RABBITMQ_SSL_VERIFY: ${RABBITMQ_SSL_VERIFY}
+    #      RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT: ${RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT}
 #    volumes:
 #      - ./tests/files/rootCA.pem:/rootCA.pem:ro
 #      - ./tests/files/rootCA.key:/rootCA.key:ro

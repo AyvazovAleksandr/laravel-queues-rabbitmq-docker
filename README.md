@@ -1,18 +1,63 @@
-# Черновик
+# Начало работы
+
+## Переменное окружение (.env), копируем .env.example и переименовываем в .env
+### Windows
+```
+copy .env.example .env
+```
+### Linux
+```
+cp .env.example .env
+```
+
+### Пример
+```yaml
+# Configuration
+PROJECT_PREFIX_DEV=project_dev
+# MYSQL Password
+DB_ROOT_PASSWORD_DEV=secret
+# Connection DB
+DB_CONNECTION_DEV=mysql
+DB_HOST_DEV=127.0.0.1
+DB_PORT_DEV=3306
+DB_DATABASE_DEV=database
+DB_USERNAME_DEV=username
+DB_PASSWORD_DEV=secret
+# Network
+NETWORK_NAME_DEV=project_network_dev
+NETWORK_IP_DEV="172.20.300.0/24"
+NGINX_NETWORK_IP_DEV="172.20.300.10"
+# для локальной разработки ставить 0.0.0.0
+EXTERNAl_IP_DEV=0.0.0.0
+# NGINX
+# разделитель пробел
+NGINX_CONF_SERVER_NAMES_DEV='example.com www.example.com'
+```
+
+## Запуск контейнеров
+```
+docker-compose up -d --build
+```
 
 ## Устанока Laravel 8 версии 
 ```
-docker-compose -f .\docker-compose.dev.yml run --rm composer create-project laravel/laravel=8.6.11 .
+docker-compose run --rm composer create-project laravel/laravel=8.6.11 .
 ```
 
 ## Установка библиотеки для работы с rabbitmq
 ```
 docker-compose run --rm composer require vladimir-yuldashev/laravel-queue-rabbitmq=11.3.0
 ```
+
+## Запуск работы с приоритетом
+```
+docker-compose run --rm artisan queue:work --queue=hight,middle,low
+```
+
 ---
 # Доступы к сервисам
 ## Rabbit-manager
-http://rabbitmq.loc:15672/
+http://rabbitmq.local:15672/
 
 
 # Сборка для работы Laravel в Docker
@@ -152,13 +197,13 @@ docker-compose -f docker-compose.dev.yml run --rm artisan migrate
 ### Очистка кэша проекта
 
 ```sh
-docker-compose -f docker-compose.dev.yml run --rm artisan clear:data
-docker-compose -f docker-compose.dev.yml run --rm artisan cache:clear
-docker-compose -f docker-compose.dev.yml run --rm artisan view:clear
-docker-compose -f docker-compose.dev.yml run --rm artisan route:clear
-docker-compose -f docker-compose.dev.yml run --rm artisan clear-compiled
-docker-compose -f docker-compose.dev.yml run --rm artisan config:cache
-docker-compose -f docker-compose.dev.yml run --rm artisan storage:link
+docker-compose run --rm artisan clear:data
+docker-compose run --rm artisan cache:clear
+docker-compose run --rm artisan view:clear
+docker-compose run --rm artisan route:clear
+docker-compose run --rm artisan clear-compiled
+docker-compose run --rm artisan config:cache
+docker-compose run --rm artisan storage:link
 ```
 ---
 

@@ -15,7 +15,7 @@ class CreateRandomCountersTable extends Migration
     {
         Schema::create('random_counters', function (Blueprint $table) {
             $table->id();
-            $table->string('queue');
+            $table->string('queue_random');
             $table->timestamps();
         });
     }
